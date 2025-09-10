@@ -1,17 +1,17 @@
-# 🚗 Vehicle Detection System
+# Vehicle Detection System
 
-## 📋 Overview
+## Overview
 
 A comprehensive vehicle detection and classification system powered by YOLOv8, PyTorch, and OpenCV. This system can detect vehicles in images and videos, classify them by type, and provide detailed analytics. **Now includes a professional web interface!**
 
-## 🌟 **New: Web Interface Available!**
+## **New: Web Interface Available!**
 
 The system now includes a modern web interface with:
-- **🌐 Web API**: Flask backend with RESTful endpoints
-- **🎨 Frontend**: Responsive HTML/JavaScript interface
-- **📤 Drag & Drop**: Intuitive file uploads
-- **📊 Real-time Results**: Live processing and visualization
-- **📱 Mobile Ready**: Works on all devices
+- **Web API**: Flask backend with RESTful endpoints
+- **Frontend**: Responsive HTML/JavaScript interface
+- **Drag & Drop**: Intuitive file uploads
+- **Real-time Results**: Live processing and visualization
+- **Mobile Ready**: Works on all devices
 
 ### **Quick Start Web Interface**
 ```bash
@@ -19,7 +19,7 @@ The system now includes a modern web interface with:
 python start_web_interface.py
 ```
 
-## 🏗️ **System Architecture**
+## **System Architecture**
 
 ### **Core Components**
 - **YOLOv8 Models**: Pre-trained and custom-trained detection models
@@ -49,7 +49,7 @@ Project/
 └── yolov8n.pt                      # Pre-trained YOLOv8 model
 ```
 
-## 🚀 **Quick Start**
+## **Quick Start**
 
 ### **1. Install Dependencies**
 ```bash
@@ -90,7 +90,7 @@ uv run python app.py
 uv run python test_system.py
 ```
 
-## 🌐 **Web Interface Features**
+## **Web Interface Features**
 
 ### **Backend API (Flask)**
 - **Port**: 5000 (http://localhost:5000)
@@ -119,7 +119,7 @@ uv run python test_system.py
 4. **Results**: View detected vehicles with confidence scores
 5. **Download**: Get processed files with detections
 
-## 🎯 **Core Features**
+## **Core Features**
 
 ### **Vehicle Detection**
 - **Multi-class Detection**: Cars, trucks, buses, motorcycles
@@ -145,7 +145,7 @@ uv run python test_system.py
 - **Confidence Analysis**: Distribution of detection confidence scores
 - **Export Capabilities**: Generate detailed reports
 
-## 🛠️ **Usage Examples**
+## **Usage Examples**
 
 ### **Basic Image Detection**
 ```python
@@ -199,7 +199,7 @@ curl http://localhost:5000/api/status
 curl http://localhost:5000/api/analytics
 ```
 
-## 🔧 **Configuration**
+## **Configuration**
 
 ### **Model Configuration**
 ```python
@@ -224,7 +224,7 @@ app.config['OUTPUT_FOLDER'] = 'outputs'
 this.apiBaseUrl = 'http://localhost:5000/api'
 ```
 
-## 📊 **System Requirements**
+## **System Requirements**
 
 ### **Software Requirements**
 - **Python**: 3.10 or higher
@@ -262,14 +262,14 @@ Flask-CORS==4.0.0
 Werkzeug==2.3.7
 ```
 
-## 🚨 **Troubleshooting**
+## **Troubleshooting**
 
 ### **Common Issues**
 
 #### **1. Import Errors**
 ```bash
 # Check if dependencies are installed
-uv run python -c "import torch, cv2, ultralytics; print('✅ All imports successful')"
+uv run python -c "import torch, cv2, ultralytics; print('All imports successful')"
 
 # Reinstall if needed
 uv add -r requirements.txt
@@ -315,7 +315,7 @@ logging.basicConfig(level=logging.DEBUG)
 app.run(debug=True)
 ```
 
-## 📈 **Training Custom Models**
+## **Training Custom Models**
 
 ### **Dataset Preparation**
 ```bash
@@ -347,7 +347,7 @@ uv run yolo val model=runs/detect/train/weights/best.pt data=dataset.yaml
 uv run yolo predict model=runs/detect/train/weights/best.pt source=test_images/
 ```
 
-## 🔄 **Updates & Maintenance**
+## **Updates & Maintenance**
 
 ### **System Updates**
 ```bash
@@ -367,7 +367,7 @@ uv add --upgrade ultralytics
 uv run yolo download yolov8n.pt
 ```
 
-## 📞 **Support & Contributing**
+## **Support & Contributing**
 
 ### **Getting Help**
 1. Check this documentation
@@ -387,7 +387,7 @@ uv run yolo download yolov8n.pt
 - Describe steps to reproduce
 - Attach relevant logs
 
-## 🎉 **Getting Started Checklist**
+## **Getting Started Checklist**
 
 - [ ] Install dependencies: `uv add -r requirements.txt`
 - [ ] Install web interface: `uv add -r backend/requirements.txt`
@@ -398,7 +398,7 @@ uv run yolo download yolov8n.pt
 - [ ] Check system status and analytics
 - [ ] Download processed results
 
-## 🔮 **Future Enhancements**
+## **Future Enhancements**
 
 ### **Planned Features**
 - **Real-time Streaming**: WebSocket support for live video
@@ -416,19 +416,19 @@ uv run yolo download yolov8n.pt
 
 ---
 
-## 🎯 **Summary**
+## **Summary**
 
 Your Vehicle Detection System is a **comprehensive solution** that combines:
 
-- ✅ **Advanced ML**: YOLOv8 + PyTorch detection engine
-- ✅ **Computer Vision**: OpenCV processing capabilities
-- ✅ **Web Interface**: Professional Flask API + HTML/JS frontend
-- ✅ **Multiple Interfaces**: Command line + web + API access
-- ✅ **Production Ready**: Robust error handling and validation
-- ✅ **Extensible**: Easy to customize and enhance
+- **Advanced ML**: YOLOv8 + PyTorch detection engine
+- **Computer Vision**: OpenCV processing capabilities
+- **Web Interface**: Professional Flask API + HTML/JS frontend
+- **Multiple Interfaces**: Command line + web + API access
+- **Production Ready**: Robust error handling and validation
+- **Extensible**: Easy to customize and enhance
 
-**Choose your interface: Command line for automation, Web interface for user experience! 🚗✨**
+**Choose your interface: Command line for automation, Web interface for user experience!**
 
 ---
 
-*For detailed web interface documentation, see the inline sections above. For complete system updates and changes, see `SUMMARY.md`.* 
+*For detailed web interface documentation, see the inline sections above. For complete system updates and changes, see `SUMMARY.md`.*
