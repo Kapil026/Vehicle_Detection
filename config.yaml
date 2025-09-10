@@ -1,0 +1,11 @@
+names:
+- auto
+- bus
+- car
+- lcv
+- motorcycle
+- multiaxle
+- tractor
+- truck
+train: /Users/kapilkumar/Documents/Project/train/images
+val: /Users/kapilkumar/Documents/Project/test/images

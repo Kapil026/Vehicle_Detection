@@ -1,0 +1,30 @@
+services:
+  # Web Service
+  - type: web
+    name: vehicle-detection-api
+    env: python
+    region: oregon  # Choose your preferred region
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start_web_interface.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: PYTORCH_CUDA_ALLOC_CONF
+        value: max_split_size_mb:32
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: vehicle-detection-data
+      mountPath: /data
+      sizeGB: 10
+
+    # Add these if you're using a frontend
+  - type: web
+    name: vehicle-detection-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

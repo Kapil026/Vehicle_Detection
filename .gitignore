@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.env
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# ML Training artifacts
+runs/
+weights/
+!yolov8n.pt  # Include the base model file needed for deployment
+*.onnx
+*.engine
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Logs
+*.log
+logs/
+log/
+
+# Local development settings
+config.local.yaml
+
+# UV package manager
+.uv/
+uv.lock
+
+# Dataset (consider if you want to version control this or not)
+# Dataset/
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Backend
+backend/__pycache__/
+backend/*.pyc
+backend/static/
+backend/media/
+
+# Render specific
+.render/
+.render-buildlogs/
+.render-cache/
+
+# Environment variables - DO NOT COMMIT THESE
+.env
+.env.local
+*.env
+render.yaml  # Uncomment if you want to keep render config private
