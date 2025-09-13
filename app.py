@@ -31,7 +31,7 @@ load_dotenv()
 from vehicle_detection import VehicleDetector
 from simple_enhanced_detection import SimpleVehicleDetector
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app)  # Enable CORS for frontend integration
 
 # Configuration
@@ -390,15 +390,16 @@ def clear_outputs():
 @app.route('/')
 def serve_frontend():
     """Serve the frontend HTML"""
-    return send_from_directory('../frontend', 'index.html')
-
-@app.route('/<path:path>')
-def serve_static(path):
-    """Serve static files from frontend directory"""
-    return send_from_directory('../frontend', path)
+    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    # Get port from environment variable or default to 10000
+    port = int(os.environ.get('PORT', 10000))
+    
+    # Ensure required directories exist
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+    
     print("Starting Vehicle Detection API...")
     print(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
     print(f"Output folder: {app.config['OUTPUT_FOLDER']}")
