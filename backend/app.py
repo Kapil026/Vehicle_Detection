@@ -15,6 +15,7 @@ import time
 import base64
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -22,6 +23,9 @@ import cv2
 import numpy as np
 from PIL import Image
 import io
+
+# Load environment variables
+load_dotenv()
 
 # Import our vehicle detection system
 from vehicle_detection import VehicleDetector
@@ -31,6 +35,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend integration
 
 # Configuration
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-dev-key-never-use-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['OUTPUT_FOLDER'] = 'outputs'
@@ -393,9 +398,10 @@ def serve_static(path):
     return send_from_directory('../frontend', path)
 
 if __name__ == '__main__':
-    print("🚗 Starting Vehicle Detection API...")
-    print(f"📁 Upload folder: {app.config['UPLOAD_FOLDER']}")
-    print(f"📁 Output folder: {app.config['OUTPUT_FOLDER']}")
-    print(f"🌐 API will be available at: http://localhost:5000")
+    port = int(os.environ.get('PORT', 5000))
+    print("Starting Vehicle Detection API...")
+    print(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
+    print(f"Output folder: {app.config['OUTPUT_FOLDER']}")
+    print(f"API will be available at port: {port}")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port)

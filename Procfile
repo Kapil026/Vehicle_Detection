@@ -1,1 +1,1 @@
-web: python start_web_interface.py
+web: gunicorn backend.app:app

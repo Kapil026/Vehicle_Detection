@@ -17,7 +17,14 @@ matplotlib==3.7.1
 seaborn==0.13.2
 Pillow==10.0.0
 
-# Utilities
+# Web Framework and Utilities
+Flask==2.3.3
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# Other Utilities
 PyYAML==6.0.2
 tqdm==4.67.1
 
