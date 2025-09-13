@@ -32,7 +32,16 @@ from vehicle_detection import VehicleDetector
 from simple_enhanced_detection import SimpleVehicleDetector
 
 app = Flask(__name__, static_folder='frontend', static_url_path='')
-CORS(app)  # Enable CORS for frontend integration
+
+# Configure CORS
+cors_origin = os.getenv('CORS_ORIGIN', '*')
+CORS(app, resources={
+    r"/api/*": {
+        "origins": cors_origin,
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-dev-key-never-use-in-production')
@@ -69,14 +78,31 @@ def get_detector():
             return None
     return detector
 
+@app.route('/health', methods=['GET'])
+def basic_health_check():
+    """Basic health check endpoint for Render"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat()
+    })
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Detailed health check endpoint"""
+    try:
+        # Check if model can be initialized
+        detector = get_detector()
+        model_status = detector is not None
+    except Exception:
+        model_status = False
+
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
         'service': 'Vehicle Detection API',
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'model_ready': model_status,
+        'environment': os.getenv('FLASK_ENV', 'development')
     })
 
 @app.route('/api/status', methods=['GET'])

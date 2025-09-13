@@ -3,8 +3,10 @@ services:
     name: vehicle-detection-api
     env: python
     region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: |
+      pip install -r requirements.txt
+      python download_model.py
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.12
@@ -18,6 +20,10 @@ services:
         value: 0.5
       - key: SECRET_KEY
         sync: false
+      - key: CORS_ORIGIN
+        value: "https://vehicle-detection-ejuf.onrender.com"
+      - key: PYTHONUNBUFFERED
+        value: "true"
     healthCheckPath: /api/health
     autoDeploy: true
     disk:
