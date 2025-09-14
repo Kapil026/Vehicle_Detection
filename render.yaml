@@ -4,9 +4,10 @@ services:
     env: python
     region: oregon
     buildCommand: |
+      mkdir -p /tmp/Ultralytics
       pip install -r requirements.txt
       python download_model.py
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 2
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.12
@@ -20,11 +21,11 @@ services:
         value: 0.5
       - key: SECRET_KEY
         sync: false
-      - key: CORS_ORIGIN
-        value: "https://vehicle-detection-ejuf.onrender.com"
       - key: PYTHONUNBUFFERED
         value: "true"
-    healthCheckPath: /api/health
+      - key: YOLO_CONFIG_DIR
+        value: "/tmp/Ultralytics"
+    healthCheckPath: /health
     autoDeploy: true
     disk:
       name: vehicle-detection-data

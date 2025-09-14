@@ -34,12 +34,12 @@ from simple_enhanced_detection import SimpleVehicleDetector
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 
 # Configure CORS
-cors_origin = os.getenv('CORS_ORIGIN', '*')
 CORS(app, resources={
-    r"/api/*": {
-        "origins": cors_origin,
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS", "HEAD"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 
