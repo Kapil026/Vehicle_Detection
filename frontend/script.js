@@ -1,14 +1,8 @@
 // Vehicle Detection System - Frontend JavaScript
-// Handles file uploads, API communication, and UI interactions
-
 class VehicleDetectionFrontend {
     constructor() {
-        // Use the current hostname for the API URL
-        const isProduction = window.location.hostname.includes('render.com');
-        this.apiBaseUrl = isProduction 
-            ? '' // Empty string means use the same origin
-            : 'http://localhost:10000';
-        
+        // Use the same origin for API calls
+        this.apiBaseUrl = '';
         this.currentFileType = 'image';
         this.currentFile = null;
         this.currentResult = null;
@@ -18,101 +12,151 @@ class VehicleDetectionFrontend {
     }
 
     initializeEventListeners() {
+        console.log('Initializing event listeners...');
+        
         // File type selection
-        document.getElementById('imageBtn').addEventListener('click', () => this.setFileType('image'));
-        document.getElementById('videoBtn').addEventListener('click', () => this.setFileType('video'));
+        const imageBtn = document.getElementById('imageBtn');
+        const videoBtn = document.getElementById('videoBtn');
+        
+        if (imageBtn) {
+            imageBtn.onclick = () => this.setFileType('image');
+        }
+        if (videoBtn) {
+            videoBtn.onclick = () => this.setFileType('video');
+        }
         
         // File upload
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         
         if (dropZone) {
-            dropZone.addEventListener('click', () => fileInput && fileInput.click());
-            dropZone.addEventListener('dragover', (e) => this.handleDragOver(e));
-            dropZone.addEventListener('drop', (e) => this.handleFileDrop(e));
-            dropZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            dropZone.onclick = () => fileInput && fileInput.click();
+            dropZone.ondragover = (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            };
+            dropZone.ondrop = (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            };
+            dropZone.ondragleave = () => dropZone.classList.remove('dragover');
         }
         
         if (fileInput) {
-            fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('File selected:', file.name);
+                    this.processFile(file);
+                }
+            };
         }
         
-        // Buttons
+        // Button click handlers
         const statusBtn = document.getElementById('statusBtn');
         const analyticsBtn = document.getElementById('analyticsBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         
         if (statusBtn) {
-            statusBtn.addEventListener('click', () => this.showSystemStatus());
+            statusBtn.onclick = () => this.showSystemStatus();
         }
         if (analyticsBtn) {
-            analyticsBtn.addEventListener('click', () => this.showAnalytics());
+            analyticsBtn.onclick = () => this.showAnalytics();
         }
         if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadResult());
+            downloadBtn.onclick = () => this.downloadResult();
         }
         
-        // Modal close buttons
+        // Modal close handlers
         const closeStatusModal = document.getElementById('closeStatusModal');
         const closeAnalyticsModal = document.getElementById('closeAnalyticsModal');
         
         if (closeStatusModal) {
-            closeStatusModal.addEventListener('click', () => this.hideModal('statusModal'));
+            closeStatusModal.onclick = () => this.hideModal('statusModal');
         }
         if (closeAnalyticsModal) {
-            closeAnalyticsModal.addEventListener('click', () => this.hideModal('analyticsModal'));
+            closeAnalyticsModal.onclick = () => this.hideModal('analyticsModal');
         }
     }
 
-    async makeApiRequest(endpoint, options = {}) {
-        const url = `${this.apiBaseUrl}/api${endpoint}`;
-        try {
-            const response = await fetch(url, {
-                ...options,
-                headers: {
-                    ...options.headers,
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error(`API request failed: ${error.message}`);
-            throw error;
-        }
-    }
-
-    async checkApiHealth() {
-        try {
-            const data = await this.makeApiRequest('/health');
-            if (data.status === 'healthy') {
-                this.showStatus('success', 'Connected to Vehicle Detection API');
+    setFileType(type) {
+        console.log('Setting file type to:', type);
+        this.currentFileType = type;
+        
+        const imageBtn = document.getElementById('imageBtn');
+        const videoBtn = document.getElementById('videoBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileTypesText = document.getElementById('fileTypesText');
+        
+        if (imageBtn && videoBtn) {
+            if (type === 'image') {
+                imageBtn.classList.add('bg-blue-600', 'text-white');
+                imageBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                videoBtn.classList.add('bg-gray-200', 'text-gray-700');
+                videoBtn.classList.remove('bg-blue-600', 'text-white');
             } else {
-                this.showStatus('error', 'API health check failed');
+                videoBtn.classList.add('bg-blue-600', 'text-white');
+                videoBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                imageBtn.classList.add('bg-gray-200', 'text-gray-700');
+                imageBtn.classList.remove('bg-blue-600', 'text-white');
             }
-        } catch (error) {
-            console.error('Health check error:', error);
-            this.showStatus('error', 'Cannot connect to API. Please check if the server is running.');
         }
+        
+        if (fileInput) {
+            fileInput.accept = type === 'image' ? 'image/*' : 'video/*';
+        }
+        
+        if (fileTypesText) {
+            fileTypesText.textContent = type === 'image' 
+                ? 'Supported formats: JPG, PNG, JPEG'
+                : 'Supported formats: MP4, AVI, MOV, MKV';
+        }
+        
+        this.resetUI();
     }
 
-    // ... rest of your existing methods ...
+    async processFile(file) {
+        console.log('Processing file:', file.name);
+        
+        const allowedExtensions = this.currentFileType === 'image' 
+            ? ['jpg', 'jpeg', 'png'] 
+            : ['mp4', 'avi', 'mov', 'mkv'];
+        
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedExtensions.includes(fileExtension)) {
+            this.showStatus('error', `Invalid file type. Please upload a ${this.currentFileType} file.`);
+            return;
+        }
+        
+        this.currentFile = file;
+        await this.uploadFile(file);
+    }
 
     async uploadFile(file) {
         try {
+            console.log('Uploading file:', file.name);
             this.showUploadProgress();
             
             const formData = new FormData();
             formData.append('file', file);
             
             const endpoint = this.currentFileType === 'image' ? '/detect/image' : '/detect/video';
-            const result = await this.makeApiRequest(endpoint, {
+            const response = await fetch(`${this.apiBaseUrl}/api${endpoint}`, {
                 method: 'POST',
                 body: formData
             });
+            
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('Upload result:', result);
             
             this.handleDetectionResult(result);
             
@@ -123,73 +167,129 @@ class VehicleDetectionFrontend {
         }
     }
 
-    async showSystemStatus() {
-        try {
-            const data = await this.makeApiRequest('/status');
-            if (data.status === 'success') {
-                this.displaySystemStatus(data);
+    handleDetectionResult(result) {
+        console.log('Handling detection result:', result);
+        this.currentResult = result;
+        this.hideUploadProgress();
+        
+        if (result.status === 'success') {
+            this.showStatus('success', `Detection completed! Found ${result.detections || result.total_frames} items.`);
+            this.displayResults(result);
+        } else {
+            this.showStatus('error', result.message || 'Detection failed');
+        }
+    }
+
+    displayResults(result) {
+        console.log('Displaying results:', result);
+        
+        const vehicleCount = document.getElementById('vehicleCount');
+        const processingTime = document.getElementById('processingTime');
+        const outputFile = document.getElementById('outputFile');
+        const vehicleDetails = document.getElementById('vehicleDetails');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        if (vehicleCount) {
+            vehicleCount.textContent = result.detections !== undefined 
+                ? result.detections 
+                : result.total_frames || 0;
+        }
+        
+        if (processingTime) {
+            processingTime.textContent = `${result.processing_time || 0}s`;
+        }
+        
+        if (outputFile) {
+            outputFile.textContent = result.output_file || 'No file';
+        }
+        
+        if (vehicleDetails) {
+            vehicleDetails.innerHTML = '';
+            
+            if (result.vehicles_detected && result.vehicles_detected.length > 0) {
+                result.vehicles_detected.forEach((vehicle, index) => {
+                    const card = this.createVehicleCard(vehicle, index);
+                    vehicleDetails.appendChild(card);
+                });
             } else {
-                this.showStatus('error', data.message || 'Failed to get system status');
+                vehicleDetails.innerHTML = '<p class="text-gray-500 text-center py-4">No vehicle details available</p>';
             }
-        } catch (error) {
-            console.error('Status error:', error);
-            this.showStatus('error', 'Failed to connect to API');
         }
         
-        document.getElementById('statusModal').classList.remove('hidden');
-    }
-
-    async showAnalytics() {
-        try {
-            const data = await this.makeApiRequest('/analytics');
-            if (data.status === 'success') {
-                this.displayAnalytics(data.analytics);
-            } else {
-                this.showStatus('error', data.message || 'Failed to get analytics');
-            }
-        } catch (error) {
-            console.error('Analytics error:', error);
-            this.showStatus('error', 'Failed to connect to API');
-        }
-        
-        document.getElementById('analyticsModal').classList.remove('hidden');
-    }
-
-    async downloadResult() {
-        if (!this.currentResult || !this.currentResult.output_file) {
-            this.showStatus('error', 'No result available for download');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${this.apiBaseUrl}/api/outputs/${this.currentResult.output_file}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = this.currentResult.output_file;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            this.showStatus('success', 'Download started!');
-            
-        } catch (error) {
-            console.error('Download error:', error);
-            this.showStatus('error', `Download failed: ${error.message}`);
+        if (resultsSection) {
+            resultsSection.classList.remove('hidden');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
     }
 
-    // ... rest of your existing code ...
+    // ... rest of your methods ...
+
+    showUploadProgress() {
+        const uploadProgress = document.getElementById('uploadProgress');
+        if (uploadProgress) {
+            uploadProgress.classList.remove('hidden');
+            this.simulateProgress();
+        }
+    }
+
+    hideUploadProgress() {
+        const uploadProgress = document.getElementById('uploadProgress');
+        if (uploadProgress) {
+            uploadProgress.classList.add('hidden');
+        }
+    }
+
+    showStatus(type, message) {
+        console.log(`Status (${type}):`, message);
+        
+        const banner = document.getElementById('statusBanner');
+        const icon = document.getElementById('statusIcon');
+        const messageEl = document.getElementById('statusMessage');
+        
+        if (!banner || !icon || !messageEl) return;
+        
+        if (type === 'success') {
+            icon.className = 'fas fa-check-circle text-green-600';
+            banner.className = 'bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg mb-6';
+        } else if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle text-red-600';
+            banner.className = 'bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-6';
+        } else {
+            icon.className = 'fas fa-info-circle text-blue-600';
+            banner.className = 'bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg mb-6';
+        }
+        
+        messageEl.textContent = message;
+        banner.classList.remove('hidden');
+        
+        setTimeout(() => banner.classList.add('hidden'), 5000);
+    }
+
+    hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    resetUI() {
+        const resultsSection = document.getElementById('resultsSection');
+        const uploadProgress = document.getElementById('uploadProgress');
+        
+        if (resultsSection) {
+            resultsSection.classList.add('hidden');
+        }
+        if (uploadProgress) {
+            uploadProgress.classList.add('hidden');
+        }
+        
+        this.currentFile = null;
+        this.currentResult = null;
+    }
 }
 
 // Initialize the frontend when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new VehicleDetectionFrontend();
+    console.log('Initializing Vehicle Detection Frontend...');
+    window.app = new VehicleDetectionFrontend();
 });

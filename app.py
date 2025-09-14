@@ -23,6 +23,11 @@ import cv2
 import numpy as np
 from PIL import Image
 import io
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -69,12 +74,14 @@ def get_detector():
         try:
             # Try to use trained model if available
             model_path = 'runs/detect/train6/weights/best.pt' if Path('runs/detect/train6/weights/best.pt').exists() else 'yolov8n.pt'
+            logger.info(f"Initializing detector with model: {model_path}")
             detector = SimpleVehicleDetector(
                 model_path=model_path,
                 confidence_threshold=0.5
             )
+            logger.info("Detector initialized successfully")
         except Exception as e:
-            print(f"Error initializing detector: {e}")
+            logger.error(f"Error initializing detector: {e}")
             return None
     return detector
 
@@ -93,7 +100,9 @@ def health_check():
         # Check if model can be initialized
         detector = get_detector()
         model_status = detector is not None
-    except Exception:
+        logger.info(f"Health check - Model status: {model_status}")
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
         model_status = False
 
     return jsonify({
@@ -175,6 +184,7 @@ def system_status():
         })
         
     except Exception as e:
+        logger.error(f"Error in system status: {e}")
         return jsonify({
             'status': 'error',
             'message': str(e),
@@ -185,21 +195,28 @@ def system_status():
 def detect_vehicles_image():
     """Process image for vehicle detection"""
     try:
+        logger.info("Received image detection request")
+        
         # Check if file was uploaded
         if 'file' not in request.files:
+            logger.warning("No file in request")
             return jsonify({
                 'status': 'error',
                 'message': 'No file uploaded'
             }), 400
         
         file = request.files['file']
+        logger.info(f"Processing file: {file.filename}")
+        
         if file.filename == '':
+            logger.warning("Empty filename received")
             return jsonify({
                 'status': 'error',
                 'message': 'No file selected'
             }), 400
         
         if not allowed_file(file.filename):
+            logger.warning(f"Invalid file type: {file.filename}")
             return jsonify({
                 'status': 'error',
                 'message': 'File type not allowed'
@@ -208,6 +225,7 @@ def detect_vehicles_image():
         # Get detector
         detector = get_detector()
         if detector is None:
+            logger.error("Detector not initialized")
             return jsonify({
                 'status': 'error',
                 'message': 'Detector not initialized'
@@ -218,11 +236,13 @@ def detect_vehicles_image():
         timestamp = int(time.time())
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{timestamp}_{filename}")
         file.save(upload_path)
+        logger.info(f"File saved to: {upload_path}")
         
         # Process image
         output_filename = f"output_{timestamp}_{filename}"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         
+        logger.info("Starting image processing")
         start_time = time.time()
         result = detector.process_image(
             image_path=upload_path,
@@ -230,6 +250,7 @@ def detect_vehicles_image():
             show_result=False
         )
         processing_time = time.time() - start_time
+        logger.info(f"Image processing completed in {processing_time:.2f}s")
         
         # Prepare response
         response_data = {
@@ -250,12 +271,16 @@ def detect_vehicles_image():
                 'bbox': detection['bbox']
             })
         
+        logger.info(f"Found {len(result['detections'])} vehicles")
+        
         # Clean up uploaded file
         os.remove(upload_path)
+        logger.info("Cleaned up uploaded file")
         
         return jsonify(response_data)
         
     except Exception as e:
+        logger.error(f"Error processing image: {str(e)}", exc_info=True)
         return jsonify({
             'status': 'error',
             'message': str(e),
@@ -266,21 +291,28 @@ def detect_vehicles_image():
 def detect_vehicles_video():
     """Process video for vehicle detection"""
     try:
+        logger.info("Received video detection request")
+        
         # Check if file was uploaded
         if 'file' not in request.files:
+            logger.warning("No file in request")
             return jsonify({
                 'status': 'error',
                 'message': 'No file uploaded'
             }), 400
         
         file = request.files['file']
+        logger.info(f"Processing video file: {file.filename}")
+        
         if file.filename == '':
+            logger.warning("Empty filename received")
             return jsonify({
                 'status': 'error',
                 'message': 'No file selected'
             }), 400
         
         if not allowed_file(file.filename):
+            logger.warning(f"Invalid file type: {file.filename}")
             return jsonify({
                 'status': 'error',
                 'message': 'File type not allowed'
@@ -289,6 +321,7 @@ def detect_vehicles_video():
         # Get detector
         detector = get_detector()
         if detector is None:
+            logger.error("Detector not initialized")
             return jsonify({
                 'status': 'error',
                 'message': 'Detector not initialized'
@@ -299,11 +332,13 @@ def detect_vehicles_video():
         timestamp = int(time.time())
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{timestamp}_{filename}")
         file.save(upload_path)
+        logger.info(f"Video saved to: {upload_path}")
         
         # Process video (limit frames for API)
         output_filename = f"output_{timestamp}_{filename}"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         
+        logger.info("Starting video processing")
         start_time = time.time()
         result = detector.process_video(
             video_path=upload_path,
@@ -312,6 +347,7 @@ def detect_vehicles_video():
             max_frames=100  # Limit frames for API
         )
         processing_time = time.time() - start_time
+        logger.info(f"Video processing completed in {processing_time:.2f}s")
         
         # Prepare response
         response_data = {
@@ -327,10 +363,12 @@ def detect_vehicles_video():
         
         # Clean up uploaded file
         os.remove(upload_path)
+        logger.info("Cleaned up uploaded file")
         
         return jsonify(response_data)
         
     except Exception as e:
+        logger.error(f"Error processing video: {str(e)}", exc_info=True)
         return jsonify({
             'status': 'error',
             'message': str(e),
@@ -341,15 +379,19 @@ def detect_vehicles_video():
 def get_output_file(filename):
     """Download processed output file"""
     try:
+        logger.info(f"Requested output file: {filename}")
         file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
         if os.path.exists(file_path):
+            logger.info(f"Sending file: {file_path}")
             return send_file(file_path, as_attachment=True)
         else:
+            logger.warning(f"File not found: {file_path}")
             return jsonify({
                 'status': 'error',
                 'message': 'File not found'
             }), 404
     except Exception as e:
+        logger.error(f"Error sending file: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e)
@@ -359,8 +401,10 @@ def get_output_file(filename):
 def get_analytics():
     """Get system analytics and statistics"""
     try:
+        logger.info("Fetching analytics")
         detector = get_detector()
         if detector is None:
+            logger.error("Detector not initialized")
             return jsonify({
                 'status': 'error',
                 'message': 'Detector not initialized'
@@ -368,6 +412,7 @@ def get_analytics():
         
         # Get analytics from detector
         analytics = detector.analytics if hasattr(detector, 'analytics') else {}
+        logger.info(f"Analytics data: {analytics}")
         
         return jsonify({
             'status': 'success',
@@ -381,6 +426,7 @@ def get_analytics():
         })
         
     except Exception as e:
+        logger.error(f"Error getting analytics: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e),
@@ -391,6 +437,7 @@ def get_analytics():
 def clear_outputs():
     """Clear all output files"""
     try:
+        logger.info("Clearing output files")
         output_dir = Path(app.config['OUTPUT_FOLDER'])
         files_removed = 0
         
@@ -399,6 +446,7 @@ def clear_outputs():
                 file_path.unlink()
                 files_removed += 1
         
+        logger.info(f"Removed {files_removed} files")
         return jsonify({
             'status': 'success',
             'message': f'Cleared {files_removed} output files',
@@ -406,6 +454,7 @@ def clear_outputs():
         })
         
     except Exception as e:
+        logger.error(f"Error clearing outputs: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e),
@@ -426,9 +475,9 @@ if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
     
-    print("Starting Vehicle Detection API...")
-    print(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
-    print(f"Output folder: {app.config['OUTPUT_FOLDER']}")
-    print(f"API will be available at port: {port}")
+    logger.info("Starting Vehicle Detection API...")
+    logger.info(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
+    logger.info(f"Output folder: {app.config['OUTPUT_FOLDER']}")
+    logger.info(f"API will be available at port: {port}")
     
     app.run(host='0.0.0.0', port=port)
