@@ -4,9 +4,28 @@ services:
     env: python
     region: oregon
     buildCommand: |
+      # Create directories
       mkdir -p /tmp/Ultralytics
-      pip install -r requirements.txt
-      python download_model.py
+      mkdir -p .cache/pip
+      
+      # Use pip cache
+      export PIP_CACHE_DIR=.cache/pip
+      
+      # Install dependencies with caching
+      if [ -f requirements.lock ]; then
+        pip install --cache-dir .cache/pip -r requirements.lock
+      else
+        pip install --cache-dir .cache/pip -r requirements.txt
+      fi
+      
+      # Download model if not in cache
+      if [ ! -f .cache/models/yolov8n.pt ]; then
+        mkdir -p .cache/models
+        python download_model.py
+        cp yolov8n.pt .cache/models/
+      else
+        cp .cache/models/yolov8n.pt .
+      fi
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 2
     envVars:
       - key: PYTHON_VERSION
@@ -25,9 +44,18 @@ services:
         value: "true"
       - key: YOLO_CONFIG_DIR
         value: "/tmp/Ultralytics"
+      - key: PIP_CACHE_DIR
+        value: ".cache/pip"
     healthCheckPath: /health
     autoDeploy: true
     disk:
       name: vehicle-detection-data
       mountPath: /data
       sizeGB: 10
+    cache:
+      - name: pip-cache
+        path: .cache/pip
+        ttl: 168h # 1 week
+      - name: model-cache
+        path: .cache/models
+        ttl: 720h # 30 days
